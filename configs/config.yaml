@@ -1,0 +1,95 @@
+# LinkedIn Automation Configuration
+
+# Search Settings
+search:
+  max_results: 100
+  pagination_delay_min: 3
+  pagination_delay_max: 7
+  filters:
+    job_titles:
+      - "Software Engineer"
+      - "Senior Developer"
+    companies: []
+    locations:
+      - "United States"
+    keywords: []
+
+# Connection Settings
+connections:
+  daily_limit: 20
+  hourly_limit: 5
+  note_templates:
+    - "Hi {{firstName}}, I came across your profile and was impressed by your work at {{company}}. I'd love to connect and learn more about your experience in {{jobTitle}}."
+    - "Hello {{firstName}}, I noticed we share similar interests in the tech industry. Would love to connect and exchange ideas!"
+    - "Hi {{firstName}}, I'm expanding my professional network with talented individuals like yourself. Let's connect!"
+  note_character_limit: 300
+  cooldown_between_requests_min: 60
+  cooldown_between_requests_max: 180
+
+# Messaging Settings
+messaging:
+  daily_limit: 10
+  hourly_limit: 3
+  templates:
+    - "Thanks for connecting, {{firstName}}! I'm always interested in learning from professionals at {{company}}. How's your experience been there?"
+    - "Hi {{firstName}}, great to connect! I'd love to hear more about your work in {{jobTitle}}."
+  cooldown_between_messages_min: 120
+  cooldown_between_messages_max: 300
+
+# Stealth Settings
+stealth:
+  # Mouse movement
+  mouse:
+    bezier_points: 4
+    speed_variation: 0.3
+    overshoot_probability: 0.4
+    micro_correction_probability: 0.3
+  
+  # Timing
+  timing:
+    action_delay_min: 2
+    action_delay_max: 5
+    think_time_min: 1
+    think_time_max: 3
+    reading_speed_wpm: 200
+  
+  # Typing
+  typing:
+    wpm_min: 40
+    wpm_max: 80
+    typo_probability: 0.05
+    pause_probability: 0.1
+  
+  # Scrolling
+  scrolling:
+    speed_min: 100
+    speed_max: 300
+    scroll_back_probability: 0.2
+    pause_probability: 0.3
+  
+  # Activity scheduling
+  scheduling:
+    business_hours_start: 9
+    business_hours_end: 18
+    timezone: "America/New_York"
+    weekend_activity: false
+    break_duration_min: 30
+    break_duration_max: 90
+    break_probability: 0.15
+
+# Browser Settings
+browser:
+  headless: false
+  user_agents:
+    - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+    - "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  viewport_widths: [1366, 1440, 1920]
+  viewport_heights: [768, 900, 1080]
+  timeout_seconds: 30
+
+# Logging
+logging:
+  level: "info"
+  format: "console"
+  output: "stdout"

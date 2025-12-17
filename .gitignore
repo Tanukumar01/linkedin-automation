@@ -1,0 +1,48 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+linkedin-bot
+linkedin-bot.exe
+
+# Test binary
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# Environment files
+.env
+*.env
+!.env.example
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+data/
+
+# Browser data
+browser-data/
+cookies.json
+*.json.bak
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
