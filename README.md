@@ -2,11 +2,11 @@
 
 A production-grade LinkedIn automation system built with **Go** and **Rod browser automation**, featuring sophisticated anti-detection mechanisms and clean, modular architecture.
 
-## ⚠️ Disclaimer
+##  Disclaimer
 
 This tool is for **educational purposes only**. Automated interaction with LinkedIn may violate their Terms of Service. Use at your own risk. The authors are not responsible for any account restrictions or bans resulting from the use of this tool.
 
-## ✨ Features
+##  Features
 
 ### Core Functionality
 - **Authentication System**: Secure login with session cookie persistence
@@ -31,13 +31,13 @@ This tool is for **educational purposes only**. Automated interaction with Linke
 9. **Viewport Randomization**: Dynamic viewport dimensions
 10. **Human Reading Patterns**: Content-based reading time simulation
 
-## 📋 Prerequisites
+## Prerequisites
 
 - **Go 1.21+** installed
 - **Chrome/Chromium** browser installed
 - LinkedIn account credentials
 
-## 🚀 Installation
+##  Installation
 
 1. **Clone the repository**:
    ```bash
@@ -70,7 +70,7 @@ This tool is for **educational purposes only**. Automated interaction with Linke
    - Stealth settings
    - Message templates
 
-## 🎯 Usage
+##  Usage
 
 ### Run the bot:
 ```bash
@@ -124,7 +124,7 @@ stealth:
     timezone: "America/New_York"
 ```
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 linkedin-automation/
@@ -172,7 +172,7 @@ linkedin-automation/
    - Cooldown periods between actions
    - Exponential backoff on errors
 
-## 📊 Database Schema
+##  Database Schema
 
 The tool uses SQLite to track:
 - **Connection Requests**: Profile URL, name, status, timestamps
@@ -204,7 +204,7 @@ go version
 - Adjust `daily_limit` in `configs/config.yaml`
 - Wait 24 hours for limit reset
 
-## 📝 Logging
+##  Logging
 
 Logs are output to stdout with configurable levels:
 - `debug`: Detailed debugging information
@@ -217,7 +217,7 @@ Set log level in `.env`:
 LOG_LEVEL=debug
 ```
 
-## 🤝 Contributing
+##  Contributing
 
 Contributions are welcome! Please:
 1. Fork the repository
@@ -225,11 +225,11 @@ Contributions are welcome! Please:
 3. Make your changes
 4. Submit a pull request
 
-## 📄 License
+##  License
 
 This project is licensed under the MIT License.
 
-## ⚖️ Legal Notice
+##  Legal Notice
 
 This tool automates interactions with LinkedIn, which may violate their Terms of Service. Use responsibly and at your own risk. The authors assume no liability for:
 - Account restrictions or bans
@@ -238,7 +238,7 @@ This tool automates interactions with LinkedIn, which may violate their Terms of
 
 **Always review and comply with LinkedIn's Terms of Service and Automation Policy.**
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - [Rod](https://github.com/go-rod/rod) - Browser automation library
 - [Rod Stealth](https://github.com/go-rod/stealth) - Stealth plugin
@@ -246,4 +246,3 @@ This tool automates interactions with LinkedIn, which may violate their Terms of
 
 ---
 
-**Built with ❤️ using Go and Rod**
