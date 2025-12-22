@@ -68,8 +68,8 @@ func (b *Browser) NewPage(userAgent string) (*rod.Page, error) {
 		return nil, fmt.Errorf("failed to set user agent: %w", err)
 	}
 
-	// Set timeout
-	page = page.Timeout(b.timeout)
+	// Set timeout (disabled globally to avoid 'context deadline exceeded' on the whole page)
+	// page = page.Timeout(b.timeout)
 
 	b.page = page
 	return page, nil

@@ -2,6 +2,8 @@
 
 A production-grade LinkedIn automation system built with **Go** and **Rod browser automation**, featuring sophisticated anti-detection mechanisms and clean, modular architecture.
 
+# Vedio Link => https://www.loom.com/share/8066388754394d83b109535df04f66fe
+
 ##  Disclaimer
 
 This tool is for **educational purposes only**. Automated interaction with LinkedIn may violate their Terms of Service. Use at your own risk. The authors are not responsible for any account restrictions or bans resulting from the use of this tool.

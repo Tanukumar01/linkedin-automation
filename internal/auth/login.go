@@ -44,8 +44,10 @@ func (a *Authenticator) Login(email, password string) error {
 		return fmt.Errorf("failed to navigate to LinkedIn: %w", err)
 	}
 
+	// Wait for page load, but don't fail immediately on timeout
+	// as LinkedIn might be slow or already redirecting to feed
 	if err := a.page.WaitLoad(); err != nil {
-		return fmt.Errorf("failed to wait for page load: %w", err)
+		logger.Warnf("Primary page load wait timed out/failed: %v. Checking status anyway...", err)
 	}
 
 	a.timing.Wait(a.timing.ThinkTime())
@@ -64,7 +66,7 @@ func (a *Authenticator) Login(email, password string) error {
 	}
 
 	if err := a.page.WaitLoad(); err != nil {
-		return fmt.Errorf("failed to wait for login page: %w", err)
+		logger.Warnf("Login page load wait timed out/failed: %v. Proceeding to find elements...", err)
 	}
 
 	a.timing.Wait(a.timing.ThinkTime())
@@ -120,15 +122,39 @@ func (a *Authenticator) Login(email, password string) error {
 	success := make(chan bool)
 
 	go func() {
-		for i := 0; i < 300; i++ { // Wait up to 5 minutes
-			if a.IsLoggedIn() {
-				success <- true
-				return
+		// Use a page without a strict timeout for the polling loop
+		// to avoid "context deadline exceeded" while waiting for user interaction
+		pollPage := a.page.CancelTimeout()
+
+		for i := 0; i < 600; i++ { // Wait up to 10 minutes
+			// Check URL and indicators
+			if info, err := pollPage.Info(); err == nil {
+				if strings.Contains(info.URL, "/feed") ||
+					strings.Contains(info.URL, "/mynetwork") ||
+					strings.Contains(info.URL, "/messaging") {
+					success <- true
+					return
+				}
 			}
 
-			// Optional: log every 10 seconds to show we are still waiting
-			if i > 0 && i%10 == 0 {
-				logger.Info("Still waiting for login... please complete any challenges in the browser.")
+			// Check for multiple indicators of logged-in state
+			indicators := []string{
+				"nav.global-nav",
+				"#global-nav",
+				".global-nav",
+				"img.global-nav__me-photo",
+			}
+
+			for _, selector := range indicators {
+				if has, _, _ := pollPage.Has(selector); has {
+					success <- true
+					return
+				}
+			}
+
+			// Optional: log every 30 seconds to show we are still waiting
+			if i > 0 && i%30 == 0 {
+				logger.Info("Still waiting for login success... Please complete any challenges in the browser.")
 			}
 
 			time.Sleep(1 * time.Second)
@@ -138,8 +164,10 @@ func (a *Authenticator) Login(email, password string) error {
 
 	if <-success {
 		logger.Info("Login success detected! Proceeding...")
+		// Important: reset page to a fresh state (with timeout) for next operations
+		a.page = a.page.CancelTimeout()
 	} else {
-		return fmt.Errorf("timeout waiting for login (5 minutes elapsed). Please try again")
+		return fmt.Errorf("timeout waiting for login. Please try again")
 	}
 
 	// Verify login success
