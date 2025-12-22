@@ -2,7 +2,8 @@
 
 A production-grade LinkedIn automation system built with **Go** and **Rod browser automation**, featuring sophisticated anti-detection mechanisms and clean, modular architecture.
 
-# Vedio Link => https://www.loom.com/share/8066388754394d83b109535df04f66fe
+#Demo Video
+Watch here: https://www.loom.com/share/8066388754394d83b109535df04f66fe
 
 ##  Disclaimer
 
