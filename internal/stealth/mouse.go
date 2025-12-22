@@ -16,37 +16,43 @@ type Point struct {
 
 // MouseMover handles human-like mouse movements
 type MouseMover struct {
-	page              *rod.Page
-	bezierPoints      int
-	speedVariation    float64
-	overshootProb     float64
+	page                *rod.Page
+	bezierPoints        int
+	speedVariation      float64
+	overshootProb       float64
 	microCorrectionProb float64
-	rand              *rand.Rand
+	rand                *rand.Rand
 }
 
 // NewMouseMover creates a new mouse mover
 func NewMouseMover(page *rod.Page, bezierPoints int, speedVariation, overshootProb, microCorrectionProb float64) *MouseMover {
 	return &MouseMover{
-		page:              page,
-		bezierPoints:      bezierPoints,
-		speedVariation:    speedVariation,
-		overshootProb:     overshootProb,
+		page:                page,
+		bezierPoints:        bezierPoints,
+		speedVariation:      speedVariation,
+		overshootProb:       overshootProb,
 		microCorrectionProb: microCorrectionProb,
-		rand:              rand.New(rand.NewSource(time.Now().UnixNano())),
+		rand:                rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
 
 // MoveToElement moves the mouse to an element with human-like behavior
 func (m *MouseMover) MoveToElement(element *rod.Element) error {
 	// Get element position and size
-	box, err := element.Box()
-	if err != nil {
-		return err
-	}
+	// Get element position and size using JS since Box() is not available
+	rect := m.page.MustEval(`(el) => {
+		const r = el.getBoundingClientRect();
+		return { x: r.x, y: r.y, width: r.width, height: r.height };
+	}`, element)
+
+	boxX := rect.Get("x").Num()
+	boxY := rect.Get("y").Num()
+	boxWidth := rect.Get("width").Num()
+	boxHeight := rect.Get("height").Num()
 
 	// Calculate target position (random point within element)
-	targetX := box.X + m.rand.Float64()*box.Width
-	targetY := box.Y + m.rand.Float64()*box.Height
+	targetX := boxX + m.rand.Float64()*boxWidth
+	targetY := boxY + m.rand.Float64()*boxHeight
 
 	// Get current mouse position
 	currentPos, err := m.getCurrentPosition()
@@ -81,7 +87,7 @@ func (m *MouseMover) moveToPoint(start, end Point) error {
 		delay := time.Duration(baseDelay+variation) * time.Millisecond
 
 		// Move mouse
-		err := m.page.Mouse.MoveAlong(proto.NewPoint(point.X, point.Y))
+		err := m.page.Mouse.MoveAlong(singlePoint(proto.NewPoint(point.X, point.Y)))
 		if err != nil {
 			return err
 		}
@@ -92,7 +98,7 @@ func (m *MouseMover) moveToPoint(start, end Point) error {
 				X: point.X + (m.rand.Float64()*4 - 2),
 				Y: point.Y + (m.rand.Float64()*4 - 2),
 			}
-			m.page.Mouse.MoveAlong(proto.NewPoint(correction.X, correction.Y))
+			m.page.Mouse.MoveAlong(singlePoint(proto.NewPoint(correction.X, correction.Y)))
 			time.Sleep(delay / 2)
 		}
 
@@ -112,20 +118,20 @@ func (m *MouseMover) generateBezierPath(start, end Point) []Point {
 	// Generate intermediate control points with randomness
 	for i := 1; i < m.bezierPoints-1; i++ {
 		t := float64(i) / float64(m.bezierPoints-1)
-		
+
 		// Linear interpolation with random offset
 		x := start.X + (end.X-start.X)*t
 		y := start.Y + (end.Y-start.Y)*t
-		
+
 		// Add random offset perpendicular to the line
 		distance := math.Sqrt(math.Pow(end.X-start.X, 2) + math.Pow(end.Y-start.Y, 2))
 		maxOffset := distance * 0.2
 		offset := (m.rand.Float64()*2 - 1) * maxOffset
-		
+
 		angle := math.Atan2(end.Y-start.Y, end.X-start.X) + math.Pi/2
 		x += offset * math.Cos(angle)
 		y += offset * math.Sin(angle)
-		
+
 		controlPoints[i] = Point{X: x, Y: y}
 	}
 
@@ -218,7 +224,7 @@ func (m *MouseMover) ClickElement(element *rod.Element) error {
 	time.Sleep(time.Duration(100+m.rand.Intn(300)) * time.Millisecond)
 
 	// Click
-	if err := m.page.Mouse.Click(proto.InputMouseButtonLeft); err != nil {
+	if err := m.page.Mouse.Click(proto.InputMouseButtonLeft, 1); err != nil {
 		return err
 	}
 
@@ -226,6 +232,18 @@ func (m *MouseMover) ClickElement(element *rod.Element) error {
 	time.Sleep(time.Duration(100+m.rand.Intn(200)) * time.Millisecond)
 
 	return nil
+}
+
+// singlePoint creates a generator for a single point
+func singlePoint(p proto.Point) func() (proto.Point, bool) {
+	called := false
+	return func() (proto.Point, bool) {
+		if !called {
+			called = true
+			return p, true
+		}
+		return proto.Point{}, false
+	}
 }
 
 // RandomIdleMovement performs random idle mouse movements

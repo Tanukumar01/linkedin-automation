@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/go-rod/rod"
-	
+
 	"github.com/Tanukumar01/linkedin-automation/internal/config"
 	"github.com/Tanukumar01/linkedin-automation/internal/logger"
 	"github.com/Tanukumar01/linkedin-automation/internal/stealth"
@@ -16,14 +16,14 @@ import (
 
 // ConnectionManager handles connection requests
 type ConnectionManager struct {
-	page      *rod.Page
-	config    *config.ConnectionsConfig
-	db        *storage.DB
-	timing    *stealth.TimingController
-	typer     *stealth.Typer
-	mouse     *stealth.MouseMover
-	scroller  *stealth.Scroller
-	rand      *rand.Rand
+	page     *rod.Page
+	config   *config.ConnectionsConfig
+	db       *storage.DB
+	timing   *stealth.TimingController
+	typer    *stealth.Typer
+	mouse    *stealth.MouseMover
+	scroller *stealth.Scroller
+	rand     *rand.Rand
 }
 
 // NewConnectionManager creates a new connection manager
@@ -169,17 +169,22 @@ func (cm *ConnectionManager) checkDailyLimit() error {
 
 // findConnectButton finds the Connect button on the profile
 func (cm *ConnectionManager) findConnectButton() (*rod.Element, error) {
-	// Try different selectors for Connect button
-	selectors := []string{
-		"button[aria-label*='Connect']",
-		"button:has-text('Connect')",
-		"div.pvs-profile-actions button:has-text('Connect')",
+	// Try different methods for Connect button
+
+	// 1. Text-based search (most reliable)
+	if el, err := cm.page.ElementR("button", "(?i)^Connect$"); err == nil {
+		return el, nil
 	}
 
-	for _, selector := range selectors {
-		element, err := cm.page.Element(selector)
-		if err == nil {
-			return element, nil
+	// 2. Aria-label based search (often contains extra text like "Connect to Name")
+	if el, err := cm.page.Element("button[aria-label*='Connect']"); err == nil {
+		return el, nil
+	}
+
+	// 3. Specific profile action area
+	if el, err := cm.page.Element(".pvs-profile-actions button"); err == nil {
+		if text, _ := el.Text(); strings.Contains(strings.ToLower(text), "connect") {
+			return el, nil
 		}
 	}
 
@@ -215,9 +220,17 @@ func (cm *ConnectionManager) typeNote(note string) error {
 
 // clickSendButton clicks the Send button
 func (cm *ConnectionManager) clickSendButton() error {
+	// Try multiple ways to find the send button
+
+	// 1. Text-based (most robust)
+	if el, err := cm.page.ElementR("button", "(?i)Send"); err == nil {
+		return cm.mouse.ClickElement(el)
+	}
+
+	// 2. Aria-label based
 	button, err := cm.page.Element("button[aria-label*='Send']")
 	if err != nil {
-		return err
+		return fmt.Errorf("send button not found: %w", err)
 	}
 
 	return cm.mouse.ClickElement(button)

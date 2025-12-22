@@ -23,12 +23,22 @@ func NewBrowser(headless bool, userDataDir string, timeoutSeconds int) (*Browser
 	// Launch browser
 	l := launcher.New().
 		Headless(headless).
-		UserDataDir(userDataDir)
+		UserDataDir(userDataDir).
+		Leakless(false).
+		NoSandbox(true).
+		Set("disable-gpu")
+
+	// Print browser info for debugging
+	if path, exists := launcher.LookPath(); exists {
+		fmt.Printf("Launching browser: %s\n", path)
+		l.Bin(path)
+	}
 
 	url, err := l.Launch()
 	if err != nil {
 		return nil, fmt.Errorf("failed to launch browser: %w", err)
 	}
+	fmt.Printf("Browser launched! Debug URL: %s\n", url)
 
 	// Connect to browser
 	browser := rod.New().ControlURL(url)

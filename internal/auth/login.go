@@ -2,12 +2,14 @@ package auth
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-rod/rod"
-	
+
 	"github.com/Tanukumar01/linkedin-automation/internal/logger"
 	"github.com/Tanukumar01/linkedin-automation/internal/stealth"
+	"github.com/go-rod/rod/lib/proto"
 )
 
 // Authenticator handles LinkedIn authentication
@@ -102,16 +104,42 @@ func (a *Authenticator) Login(email, password string) error {
 		return fmt.Errorf("failed to find sign in button: %w", err)
 	}
 
-	if err := signInButton.Click(rod.ButtonLeft, 1); err != nil {
+	if err := signInButton.Click(proto.InputMouseButtonLeft, 1); err != nil {
 		return fmt.Errorf("failed to click sign in button: %w", err)
 	}
 
-	// Wait for navigation
-	time.Sleep(5 * time.Second)
+	// Wait for navigation or challenge
+	logger.Info("---------------------------------------------------------")
+	logger.Info("WAITTING FOR LOGIN: Please check the browser window!")
+	logger.Info("If you see a CAPTCHA or 'Check your phone' notification,")
+	logger.Info("please solve it manually in the opened browser window.")
+	logger.Info("The bot will automatically continue once you are logged in.")
+	logger.Info("---------------------------------------------------------")
 
-	// Check for security challenges
-	if err := a.checkForSecurityChallenges(); err != nil {
-		return err
+	// Create a channel to signal login success
+	success := make(chan bool)
+
+	go func() {
+		for i := 0; i < 300; i++ { // Wait up to 5 minutes
+			if a.IsLoggedIn() {
+				success <- true
+				return
+			}
+
+			// Optional: log every 10 seconds to show we are still waiting
+			if i > 0 && i%10 == 0 {
+				logger.Info("Still waiting for login... please complete any challenges in the browser.")
+			}
+
+			time.Sleep(1 * time.Second)
+		}
+		success <- false
+	}()
+
+	if <-success {
+		logger.Info("Login success detected! Proceeding...")
+	} else {
+		return fmt.Errorf("timeout waiting for login (5 minutes elapsed). Please try again")
 	}
 
 	// Verify login success
@@ -131,13 +159,30 @@ func (a *Authenticator) Login(email, password string) error {
 
 // IsLoggedIn checks if user is logged in
 func (a *Authenticator) IsLoggedIn() bool {
-	// Check for feed or profile elements that indicate logged-in state
-	has, _, err := a.page.Has("nav.global-nav")
-	if err != nil {
-		return false
+	// 1. Check URL
+	if info, err := a.page.Info(); err == nil {
+		if strings.Contains(info.URL, "/feed") || strings.Contains(info.URL, "/mynetwork") {
+			return true
+		}
 	}
 
-	return has
+	// 2. Check for multiple indicators of logged-in state
+	indicators := []string{
+		"nav.global-nav",
+		"#global-nav",
+		".global-nav",
+		"button.global-nav__primary-link--active",
+		"div.authentication-outlet", // Container for the logged in app
+		"img.global-nav__me-photo",  // Profile photo in nav
+	}
+
+	for _, selector := range indicators {
+		if has, _, _ := a.page.Has(selector); has {
+			return true
+		}
+	}
+
+	return false
 }
 
 // checkForSecurityChallenges detects security challenges
@@ -168,6 +213,15 @@ func (a *Authenticator) checkForSecurityChallenges() error {
 	if hasEmailVerification {
 		logger.Warn("Email verification required - manual intervention needed")
 		return fmt.Errorf("email verification required - please complete manually")
+	}
+
+	// Check for mobile app verification (Check your phone)
+	info, err := a.page.Info()
+	if err == nil && info.URL != "" {
+		if hasChallenge, _, _ := a.page.Has("button[id*='resend']"); hasChallenge {
+			logger.Warn("Mobile app verification detected - please approve on your phone")
+			return fmt.Errorf("mobile app verification required - please approve on your phone")
+		}
 	}
 
 	return nil

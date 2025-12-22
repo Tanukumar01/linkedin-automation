@@ -66,18 +66,18 @@ func (s *Scroller) ScrollDown(page *rod.Page, distance int) error {
 
 // ScrollToElement scrolls to make an element visible
 func (s *Scroller) ScrollToElement(page *rod.Page, element *rod.Element) error {
-	// Get element position
-	box, err := element.Box()
-	if err != nil {
-		return err
-	}
+	// Get element position using JS since Box() is not available
+	yVal := page.MustEval(`(el) => {
+		const rect = el.getBoundingClientRect();
+		return rect.top + window.pageYOffset;
+	}`, element)
 
 	// Get viewport height
 	viewport := page.MustEval(`() => window.innerHeight`).Int()
 
 	// Calculate scroll distance
 	currentScroll := page.MustEval(`() => window.pageYOffset`).Int()
-	targetScroll := int(box.Y) - viewport/2
+	targetScroll := yVal.Int() - viewport/2
 
 	distance := targetScroll - currentScroll
 

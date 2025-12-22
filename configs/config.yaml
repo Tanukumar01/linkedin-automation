@@ -72,7 +72,7 @@ stealth:
     business_hours_start: 9
     business_hours_end: 18
     timezone: "America/New_York"
-    weekend_activity: false
+    weekend_activity: true
     break_duration_min: 30
     break_duration_max: 90
     break_probability: 0.15
@@ -86,7 +86,7 @@ browser:
     - "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
   viewport_widths: [1366, 1440, 1920]
   viewport_heights: [768, 900, 1080]
-  timeout_seconds: 30
+  timeout_seconds: 60
 
 # Logging
 logging:

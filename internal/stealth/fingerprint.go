@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/proto"
 )
 
 // FingerprintMasker handles browser fingerprint masking
@@ -43,7 +44,7 @@ func (f *FingerprintMasker) GetRandomViewport() (int, int) {
 // ApplyStealthScripts applies stealth scripts to mask automation
 func (f *FingerprintMasker) ApplyStealthScripts(page *rod.Page) error {
 	// Disable navigator.webdriver
-	err := page.Eval(`() => {
+	_, err := page.Eval(`() => {
 		Object.defineProperty(navigator, 'webdriver', {
 			get: () => undefined
 		});
@@ -53,7 +54,7 @@ func (f *FingerprintMasker) ApplyStealthScripts(page *rod.Page) error {
 	}
 
 	// Mask chrome automation properties
-	err = page.Eval(`() => {
+	_, err = page.Eval(`() => {
 		window.navigator.chrome = {
 			runtime: {},
 		};
@@ -63,7 +64,7 @@ func (f *FingerprintMasker) ApplyStealthScripts(page *rod.Page) error {
 	}
 
 	// Override permissions
-	err = page.Eval(`() => {
+	_, err = page.Eval(`() => {
 		const originalQuery = window.navigator.permissions.query;
 		window.navigator.permissions.query = (parameters) => (
 			parameters.name === 'notifications' ?
@@ -76,7 +77,7 @@ func (f *FingerprintMasker) ApplyStealthScripts(page *rod.Page) error {
 	}
 
 	// Mock plugins
-	err = page.Eval(`() => {
+	_, err = page.Eval(`() => {
 		Object.defineProperty(navigator, 'plugins', {
 			get: () => [
 				{
@@ -101,7 +102,7 @@ func (f *FingerprintMasker) ApplyStealthScripts(page *rod.Page) error {
 	}
 
 	// Mock languages
-	err = page.Eval(`() => {
+	_, err = page.Eval(`() => {
 		Object.defineProperty(navigator, 'languages', {
 			get: () => ['en-US', 'en'],
 		});
@@ -111,7 +112,7 @@ func (f *FingerprintMasker) ApplyStealthScripts(page *rod.Page) error {
 	}
 
 	// Override toString methods to hide modifications
-	err = page.Eval(`() => {
+	_, err = page.Eval(`() => {
 		const originalToString = Function.prototype.toString;
 		Function.prototype.toString = function() {
 			if (this === navigator.permissions.query) {
@@ -130,8 +131,10 @@ func (f *FingerprintMasker) ApplyStealthScripts(page *rod.Page) error {
 // RandomizeViewport randomly changes the viewport size
 func (f *FingerprintMasker) RandomizeViewport(page *rod.Page) error {
 	width, height := f.GetRandomViewport()
-	return page.SetViewport(&rod.ViewportOptions{
-		Width:  width,
-		Height: height,
+	return page.SetViewport(&proto.EmulationSetDeviceMetricsOverride{
+		Width:             width,
+		Height:            height,
+		DeviceScaleFactor: 1,
+		Mobile:            false,
 	})
 }

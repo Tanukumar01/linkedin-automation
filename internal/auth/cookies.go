@@ -58,8 +58,22 @@ func (cm *CookieManager) LoadCookies(page *rod.Page) error {
 		return fmt.Errorf("failed to unmarshal cookies: %w", err)
 	}
 
+	var params []*proto.NetworkCookieParam
+	for _, c := range cookies {
+		params = append(params, &proto.NetworkCookieParam{
+			Name:     c.Name,
+			Value:    c.Value,
+			Domain:   c.Domain,
+			Path:     c.Path,
+			Secure:   c.Secure,
+			HTTPOnly: c.HTTPOnly,
+			SameSite: c.SameSite,
+			Expires:  c.Expires,
+		})
+	}
+
 	// Set cookies
-	if err := page.SetCookies(cookies); err != nil {
+	if err := page.SetCookies(params); err != nil {
 		return fmt.Errorf("failed to set cookies: %w", err)
 	}
 
